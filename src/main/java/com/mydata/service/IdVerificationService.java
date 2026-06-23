@@ -32,9 +32,10 @@ public class IdVerificationService {
     public IdVerificationResponse verifyIdentity(IdVerificationRequest request) {
         validateRequest(request);
 
-        String residentNo = normalizeResidentNo(request.getIdResidentNo());
+        String residentNo = extractResidentKey(request.getIdResidentNo());
         String residentFront = residentNo.substring(0, 6);
         String genderCode = residentNo.substring(6, 7);
+        String issueDate = normalizeIssueDate(request.getIdIssueDate());
 
         String generatedCiValue = ciValueGenerator.generate(
                 request.getIdName(),
@@ -47,7 +48,7 @@ public class IdVerificationService {
                 .findFirstByCiValueAndIdTypeAndIdIssueDateAndStatus(
                         generatedCiValue,
                         normalize(request.getIdType()),
-                        normalize(request.getIdIssueDate()),
+                        issueDate,
                         "ACTIVE"
                 );
 
@@ -67,7 +68,7 @@ public class IdVerificationService {
                 normalize(request.getIdName()),
                 residentNo,
                 normalizeAddress(request.getIdAddress()),
-                normalize(request.getIdIssueDate()),
+                issueDate,
                 generatedCiValue,
                 matchedIdentityId,
                 verifiedYn,
@@ -76,9 +77,13 @@ public class IdVerificationService {
 
         idVerificationRepository.save(entity);
 
+        String responseCiValue = matchedIdentity.isPresent()
+                ? generatedCiValue
+                : null;
+
         return new IdVerificationResponse(
-                request.getCreditAppId(),
-                verifiedYn
+                verifiedYn,
+                responseCiValue
         );
     }
 
@@ -111,10 +116,10 @@ public class IdVerificationService {
             throw new IllegalArgumentException("발급일자가 없습니다.");
         }
 
-        String residentNo = normalizeResidentNo(request.getIdResidentNo());
+        String residentNo = extractResidentKey(request.getIdResidentNo());
 
         if (!residentNo.matches("\\d{7}")) {
-            throw new IllegalArgumentException("주민등록번호 정보는 앞 6자리와 성별코드 1자리를 포함한 7자리여야 합니다.");
+            throw new IllegalArgumentException("주민등록번호 정보는 앞 6자리와 성별코드 1자리를 포함해야 합니다.");
         }
 
         String genderCode = residentNo.substring(6, 7);
@@ -123,14 +128,32 @@ public class IdVerificationService {
             throw new IllegalArgumentException("성별코드가 올바르지 않습니다.");
         }
 
-        String issueDate = normalize(request.getIdIssueDate());
+        String issueDate = normalizeIssueDate(request.getIdIssueDate());
 
         if (!issueDate.matches("\\d{8}")) {
-            throw new IllegalArgumentException("발급일자는 yyyyMMdd 형식이어야 합니다.");
+            throw new IllegalArgumentException("발급일자는 yyyyMMdd 또는 yyyy-MM-dd 형식이어야 합니다.");
         }
     }
 
-    private String normalizeResidentNo(String value) {
+    private String extractResidentKey(String value) {
+        if (value == null) {
+            return null;
+        }
+
+        String digits = value.replaceAll("[^0-9]", "");
+
+        if (digits.length() == 13) {
+            return digits.substring(0, 7);
+        }
+
+        if (digits.length() == 7) {
+            return digits;
+        }
+
+        throw new IllegalArgumentException("주민등록번호 정보는 7자리 또는 13자리 형식이어야 합니다.");
+    }
+
+    private String normalizeIssueDate(String value) {
         return value == null ? null : value.replaceAll("[^0-9]", "");
     }
 
