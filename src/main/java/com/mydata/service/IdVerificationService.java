@@ -1,30 +1,23 @@
 package com.mydata.service;
 
-import java.util.Optional;
-
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.mydata.domain.IdVerification;
-import com.mydata.domain.IdentityMaster;
 import com.mydata.dto.IdVerificationRequest;
 import com.mydata.dto.IdVerificationResponse;
 import com.mydata.global.util.CiValueGenerator;
 import com.mydata.repository.IdVerificationRepository;
-import com.mydata.repository.IdentityMasterRepository;
 
 @Service
 public class IdVerificationService {
 
     private final IdVerificationRepository idVerificationRepository;
-    private final IdentityMasterRepository identityMasterRepository;
     private final CiValueGenerator ciValueGenerator;
 
     public IdVerificationService(IdVerificationRepository idVerificationRepository,
-                                 IdentityMasterRepository identityMasterRepository,
                                  CiValueGenerator ciValueGenerator) {
         this.idVerificationRepository = idVerificationRepository;
-        this.identityMasterRepository = identityMasterRepository;
         this.ciValueGenerator = ciValueGenerator;
     }
 
@@ -35,7 +28,6 @@ public class IdVerificationService {
         String residentNo = extractResidentKey(request.getIdResidentNo());
         String residentFront = residentNo.substring(0, 6);
         String genderCode = residentNo.substring(6, 7);
-        String issueDate = normalizeIssueDate(request.getIdIssueDate());
 
         String generatedCiValue = ciValueGenerator.generate(
                 request.getIdName(),
