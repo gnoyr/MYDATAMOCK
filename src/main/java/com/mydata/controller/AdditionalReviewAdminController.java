@@ -2,6 +2,7 @@ package com.mydata.controller;
 
 import com.mydata.dto.AdditionalReviewDetailDto;
 import com.mydata.service.AdditionalReviewAdminService;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -13,6 +14,9 @@ public class AdditionalReviewAdminController {
 
     private final AdditionalReviewAdminService adminService;
 
+    @Value("${bnk.server.url}")
+    private String bnkServerUrl;
+
     public AdditionalReviewAdminController(AdditionalReviewAdminService adminService) {
         this.adminService = adminService;
     }
@@ -20,6 +24,7 @@ public class AdditionalReviewAdminController {
     @GetMapping
     public String list(Model model) {
         model.addAttribute("reviews", adminService.getPendingList());
+        model.addAttribute("bnkServerUrl", bnkServerUrl);
         return "review/list";
     }
 
@@ -27,6 +32,7 @@ public class AdditionalReviewAdminController {
     public String detail(@PathVariable Long creditAppId, Model model) {
         AdditionalReviewDetailDto detail = adminService.getDetail(creditAppId);
         model.addAttribute("detail", detail);
+        model.addAttribute("bnkServerUrl", bnkServerUrl);
         return "review/detail";
     }
 

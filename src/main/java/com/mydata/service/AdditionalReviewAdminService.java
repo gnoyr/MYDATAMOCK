@@ -2,10 +2,12 @@ package com.mydata.service;
 
 import com.mydata.domain.AdditionalReview;
 import com.mydata.domain.CreditProfile;
+import com.mydata.domain.HometaxIncome;
 import com.mydata.dto.AdditionalReviewDetailDto;
 import com.mydata.dto.AdditionalReviewResultCallbackRequest;
 import com.mydata.repository.AdditionalReviewRepository;
 import com.mydata.repository.CreditProfileRepository;
+import com.mydata.repository.HometaxIncomeRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -22,6 +24,7 @@ public class AdditionalReviewAdminService {
 
     private final AdditionalReviewRepository additionalReviewRepository;
     private final CreditProfileRepository    creditProfileRepository;
+    private final HometaxIncomeRepository    hometaxIncomeRepository;
     private final RestTemplate               restTemplate;
 
     @Value("${bnk.server.url}")
@@ -29,9 +32,11 @@ public class AdditionalReviewAdminService {
 
     public AdditionalReviewAdminService(AdditionalReviewRepository additionalReviewRepository,
                                         CreditProfileRepository creditProfileRepository,
+                                        HometaxIncomeRepository hometaxIncomeRepository,
                                         RestTemplate restTemplate) {
         this.additionalReviewRepository = additionalReviewRepository;
         this.creditProfileRepository    = creditProfileRepository;
+        this.hometaxIncomeRepository    = hometaxIncomeRepository;
         this.restTemplate               = restTemplate;
     }
 
@@ -83,7 +88,26 @@ public class AdditionalReviewAdminService {
             String reason = buildDocRejectionReason(incomeDocOk, assetDocOk, jobDocOk);
             callback = new AdditionalReviewResultCallbackRequest(creditAppId, reason, REVIEWED_BY);
         } else {
-            // 진위여부 통과 → BNKcard에서 한도 산정
+            // 진위여부 통과 → MYDATA_CREDIT_PROFILE.ESTIMATED_INCOME 업데이트
+            if (profile != null && estimatedMonthlyIncome != null) {
+                creditProfileRepository.updateEstimatedIncome(profile.getCiValue(), estimatedMonthlyIncome);
+                log.info("[추가심사] CREDIT_PROFILE 월추정소득 업데이트: ciValue={}, estimatedIncome={}",
+                        profile.getCiValue(), estimatedMonthlyIncome);
+            }
+
+            // HOMETAX_INCOME: NO_DATA/FAILED 레코드를 서류 확인 소득으로 갱신
+            List<HometaxIncome> unverified = hometaxIncomeRepository.findUnverifiedByCreditAppId(creditAppId);
+            if (!unverified.isEmpty() && estimatedMonthlyIncome != null) {
+                long annualIncome = estimatedMonthlyIncome * 12;
+                for (HometaxIncome h : unverified) {
+                    h.verifyWithDocumentIncome(annualIncome);
+                }
+                hometaxIncomeRepository.saveAll(unverified);
+                log.info("[추가심사] HOMETAX_INCOME {}건 SUCCESS 업데이트: creditAppId={}, annualIncome={}",
+                        unverified.size(), creditAppId, annualIncome);
+            }
+
+            // BNKcard에서 한도 산정
             callback = new AdditionalReviewResultCallbackRequest(
                     creditAppId,
                     REVIEWED_BY,

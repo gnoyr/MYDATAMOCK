@@ -27,7 +27,7 @@ public class AdditionalScreeningService {
     }
 
     @Transactional
-    public void screen(Long creditAppId) {
+    public void screen(Long creditAppId, String ciValueFromRequest) {
         if (creditAppId == null) {
             throw new IllegalArgumentException("신청 ID가 없습니다.");
         }
@@ -36,11 +36,13 @@ public class AdditionalScreeningService {
                 .findTopByCreditAppIdOrderByFirstScreeningIdDesc(creditAppId)
                 .orElse(null);
 
-        CreditProfile creditProfile = creditProfileRepository
-                .findTopByCreditAppIdOrderByCreditProfileIdDesc(creditAppId)
-                .orElse(null);
+        // ciValue: BNKcard 본인인증 시 생성된 값을 요청에서 직접 받음
+        String ciValue = (ciValueFromRequest != null && !ciValueFromRequest.isBlank())
+                ? ciValueFromRequest : "";
+        if (ciValue.isBlank()) {
+            log.warn("[추가심사] ciValue 없음, creditAppId={}", creditAppId);
+        }
 
-        String ciValue      = creditProfile != null ? creditProfile.getCiValue() : "";
         String incomeDocKey = firstScreening != null ? firstScreening.getIncomeDocKey() : null;
         String assetDocKey  = firstScreening != null ? firstScreening.getAssetDocKey()  : null;
         String jobDocKey    = firstScreening != null ? firstScreening.getJobDocKey()    : null;
@@ -50,6 +52,20 @@ public class AdditionalScreeningService {
         );
         additionalReviewRepository.save(review);
 
-        log.info("[추가심사] PENDING 저장 완료: creditAppId={}", creditAppId);
+        log.info("[추가심사] PENDING 저장 완료: creditAppId={}, ciValue존재={}", creditAppId, !ciValue.isBlank());
+    }
+
+    @Transactional
+    public void updateDocs(Long creditAppId, String incomeDocKey, String assetDocKey, String jobDocKey) {
+        AdditionalReview review = additionalReviewRepository
+                .findTopByCreditAppIdOrderByAdditionalReviewIdDesc(creditAppId)
+                .orElseThrow(() -> new IllegalArgumentException("추가심사 요청을 찾을 수 없습니다: " + creditAppId));
+
+        if (!"PENDING".equals(review.getStatus())) {
+            throw new IllegalStateException("이미 처리된 추가심사 요청입니다: " + creditAppId);
+        }
+
+        review.updateDocs(incomeDocKey, assetDocKey, jobDocKey);
+        log.info("[추가심사] 서류 재제출 완료: creditAppId={}", creditAppId);
     }
 }

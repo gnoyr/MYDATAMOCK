@@ -36,6 +36,19 @@ public class IdentityMaster {
     @Column(name = "CREATED_AT", nullable = false)
     private LocalDateTime createdAt;
 
+    public IdentityMaster(String idType, String idName, String idResidentNo,
+                          String idAddress, String idIssueDate,
+                          String ciValue, String status) {
+        this.idType       = idType;
+        this.idName       = idName;
+        this.idResidentNo = idResidentNo;
+        this.idAddress    = idAddress;
+        this.idIssueDate  = idIssueDate;
+        this.ciValue      = ciValue;
+        this.status       = status;
+        this.createdAt    = LocalDateTime.now();
+    }
+
     protected IdentityMaster() {
     }
 
