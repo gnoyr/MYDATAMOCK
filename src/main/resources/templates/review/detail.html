@@ -75,17 +75,23 @@
     <div class="info-grid">
         <div class="info-item">
             <label>소득서류</label>
-            <span th:if="${detail.incomeDocKey != null}" class="doc-link" th:text="${detail.incomeDocKey}"></span>
+            <a th:if="${detail.incomeDocKey != null}"
+               th:href="${bnkServerUrl + '/api/applications/credit/docs/download?key=' + detail.incomeDocKey}"
+               target="_blank" class="doc-link">서류 보기 →</a>
             <span th:if="${detail.incomeDocKey == null}" class="doc-none">미제출</span>
         </div>
         <div class="info-item">
             <label>재산서류</label>
-            <span th:if="${detail.assetDocKey != null}" class="doc-link" th:text="${detail.assetDocKey}"></span>
+            <a th:if="${detail.assetDocKey != null}"
+               th:href="${bnkServerUrl + '/api/applications/credit/docs/download?key=' + detail.assetDocKey}"
+               target="_blank" class="doc-link">서류 보기 →</a>
             <span th:if="${detail.assetDocKey == null}" class="doc-none">미제출</span>
         </div>
         <div class="info-item">
             <label>직업서류</label>
-            <span th:if="${detail.jobDocKey != null}" class="doc-link" th:text="${detail.jobDocKey}"></span>
+            <a th:if="${detail.jobDocKey != null}"
+               th:href="${bnkServerUrl + '/api/applications/credit/docs/download?key=' + detail.jobDocKey}"
+               target="_blank" class="doc-link">서류 보기 →</a>
             <span th:if="${detail.jobDocKey == null}" class="doc-none">미제출</span>
         </div>
     </div>

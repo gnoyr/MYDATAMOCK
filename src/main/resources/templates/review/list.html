@@ -38,9 +38,24 @@
             </tr>
             <tr th:each="r : ${reviews}">
                 <td th:text="${r.creditAppId}"></td>
-                <td th:text="${r.incomeDocKey != null ? r.incomeDocKey : '-'}"></td>
-                <td th:text="${r.assetDocKey  != null ? r.assetDocKey  : '-'}"></td>
-                <td th:text="${r.jobDocKey    != null ? r.jobDocKey    : '-'}"></td>
+                <td>
+                    <a th:if="${r.incomeDocKey != null}"
+                       th:href="${bnkServerUrl + '/api/applications/credit/docs/download?key=' + r.incomeDocKey}"
+                       target="_blank" style="color:#2563eb;font-size:13px;">보기</a>
+                    <span th:if="${r.incomeDocKey == null}" style="color:#9ca3af;">-</span>
+                </td>
+                <td>
+                    <a th:if="${r.assetDocKey != null}"
+                       th:href="${bnkServerUrl + '/api/applications/credit/docs/download?key=' + r.assetDocKey}"
+                       target="_blank" style="color:#2563eb;font-size:13px;">보기</a>
+                    <span th:if="${r.assetDocKey == null}" style="color:#9ca3af;">-</span>
+                </td>
+                <td>
+                    <a th:if="${r.jobDocKey != null}"
+                       th:href="${bnkServerUrl + '/api/applications/credit/docs/download?key=' + r.jobDocKey}"
+                       target="_blank" style="color:#2563eb;font-size:13px;">보기</a>
+                    <span th:if="${r.jobDocKey == null}" style="color:#9ca3af;">-</span>
+                </td>
                 <td th:text="${#temporals.format(r.createdAt, 'yyyy-MM-dd HH:mm')}"></td>
                 <td><a class="btn" th:href="@{/admin/review/{id}(id=${r.creditAppId})}">심사하기</a></td>
             </tr>

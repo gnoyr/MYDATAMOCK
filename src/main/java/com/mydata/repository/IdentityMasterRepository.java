@@ -14,4 +14,6 @@ public interface IdentityMasterRepository extends JpaRepository<IdentityMaster, 
             String idIssueDate,
             String status
     );
+
+    Optional<IdentityMaster> findByCiValueAndStatus(String ciValue, String status);
 }

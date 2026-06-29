@@ -14,6 +14,10 @@ import com.mydata.repository.HometaxIncomeRepository;
 
 import java.util.List;
 import java.util.Optional;
+
+import com.mydata.domain.IdVerification;
+import com.mydata.repository.IdVerificationRepository;
+
 @Service
 public class FirstScreeningService {
 
@@ -24,18 +28,34 @@ public class FirstScreeningService {
     private final FirstScreeningRepository firstScreeningRepository;
     private final CreditProfileRepository  creditProfileRepository;
     private final HometaxIncomeRepository  hometaxIncomeRepository;
+    private final IdVerificationRepository idVerificationRepository;
 
     public FirstScreeningService(FirstScreeningRepository firstScreeningRepository,
                                  CreditProfileRepository creditProfileRepository,
-                                 HometaxIncomeRepository hometaxIncomeRepository) {
-        this.firstScreeningRepository = firstScreeningRepository;
-        this.creditProfileRepository  = creditProfileRepository;
-        this.hometaxIncomeRepository  = hometaxIncomeRepository;
+                                 HometaxIncomeRepository hometaxIncomeRepository,
+                                 IdVerificationRepository idVerificationRepository) {
+        this.firstScreeningRepository  = firstScreeningRepository;
+        this.creditProfileRepository   = creditProfileRepository;
+        this.hometaxIncomeRepository   = hometaxIncomeRepository;
+        this.idVerificationRepository  = idVerificationRepository;
     }
 
     @Transactional
     public FirstScreeningResponse screen(FirstScreeningRequest request) {
         validateRequest(request);
+
+        // ── 0단계. CI값 검증 — 본인인증 기록과 대조 ─────────────────
+        IdVerification idVerification = idVerificationRepository
+                .findTopByAppIdOrderByCreatedAtDesc(request.getCreditAppId())
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "본인인증 이력이 없습니다. creditAppId=" + request.getCreditAppId()));
+
+        if (!"Y".equals(idVerification.getIdVerifiedYn())) {
+            throw new SecurityException("본인인증이 완료되지 않은 신청입니다.");
+        }
+        if (!idVerification.getGeneratedCiValue().equals(request.getCiValue())) {
+            throw new SecurityException("CI값 불일치: 심사 요청의 CI값이 본인인증 기록과 다릅니다.");
+        }
 
         // ── 1단계. 신용프로필 조회 ─────────────────────────────────
         CreditProfile creditProfile = creditProfileRepository

@@ -67,4 +67,12 @@ public class HometaxIncome {
     public Long getAnnualIncome()    { return annualIncome; }
     public String getQueryStatus()   { return queryStatus; }
     public String getFailReason()    { return failReason; }
+
+    // 서류 심사 통과 시 소득 정보 갱신
+    public void verifyWithDocumentIncome(Long annualIncome) {
+        this.queryStatus  = "SUCCESS";
+        this.annualIncome = annualIncome;
+        this.failReason   = null;
+        this.updatedAt    = java.time.LocalDateTime.now();
+    }
 }

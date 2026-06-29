@@ -54,6 +54,13 @@ public class AdditionalReview {
         this.completedAt = LocalDateTime.now();
     }
 
+    // 서류 재제출 시 docKey 갱신 (PENDING 상태에서만 호출)
+    public void updateDocs(String incomeDocKey, String assetDocKey, String jobDocKey) {
+        this.incomeDocKey = incomeDocKey;
+        this.assetDocKey  = assetDocKey;
+        this.jobDocKey    = jobDocKey;
+    }
+
     public Long getAdditionalReviewId() { return additionalReviewId; }
     public Long getCreditAppId()        { return creditAppId; }
     public String getCiValue()          { return ciValue; }
