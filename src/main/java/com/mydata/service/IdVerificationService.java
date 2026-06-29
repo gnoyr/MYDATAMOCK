@@ -43,48 +43,65 @@ public class IdVerificationService {
                 genderCode,
                 request.getIdAddress()
         );
-
-        Optional<IdentityMaster> matchedIdentity = identityMasterRepository
-                .findFirstByCiValueAndIdTypeAndIdIssueDateAndStatus(
-                        generatedCiValue,
-                        normalize(request.getIdType()),
-                        issueDate,
-                        "ACTIVE"
-                );
-
-        String verifiedYn = matchedIdentity.isPresent() ? "Y" : "N";
-
-        Long matchedIdentityId = matchedIdentity
-                .map(IdentityMaster::getIdentityId)
-                .orElse(null);
-
-        String failReason = matchedIdentity.isPresent()
-                ? null
-                : "신원 원장 정보와 일치하지 않습니다.";
-
+        
+        // TODO: 임시 처리 — MYDATA_IDENTITY_MASTER 연동 전까지 무조건 Y 반환
         IdVerification entity = new IdVerification(
-                request.getCreditAppId(),
+                request.getAppId(),
                 normalize(request.getIdType()),
                 normalize(request.getIdName()),
                 residentNo,
                 normalizeAddress(request.getIdAddress()),
-                issueDate,
+                normalizeIssueDate(request.getIdIssueDate()),
                 generatedCiValue,
-                matchedIdentityId,
-                verifiedYn,
-                failReason
+                null,
+                "Y",
+                null
         );
-
         idVerificationRepository.save(entity);
 
-        String responseCiValue = matchedIdentity.isPresent()
-                ? generatedCiValue
-                : null;
+        return new IdVerificationResponse("Y", generatedCiValue);
 
-        return new IdVerificationResponse(
-                verifiedYn,
-                responseCiValue
-        );
+//        Optional<IdentityMaster> matchedIdentity = identityMasterRepository
+//                .findFirstByCiValueAndIdTypeAndIdIssueDateAndStatus(
+//                        generatedCiValue,
+//                        normalize(request.getIdType()),
+//                        issueDate,
+//                        "ACTIVE"
+//                );
+//
+//        String verifiedYn = matchedIdentity.isPresent() ? "Y" : "N";
+//
+//        Long matchedIdentityId = matchedIdentity
+//                .map(IdentityMaster::getIdentityId)
+//                .orElse(null);
+//
+//        String failReason = matchedIdentity.isPresent()
+//                ? null
+//                : "신원 원장 정보와 일치하지 않습니다.";
+//
+//        IdVerification entity = new IdVerification(
+//                request.getAppId(),
+//                normalize(request.getIdType()),
+//                normalize(request.getIdName()),
+//                residentNo,
+//                normalizeAddress(request.getIdAddress()),
+//                issueDate,
+//                generatedCiValue,
+//                matchedIdentityId,
+//                verifiedYn,
+//                failReason
+//        );
+//
+//        idVerificationRepository.save(entity);
+//
+//        String responseCiValue = matchedIdentity.isPresent()
+//                ? generatedCiValue
+//                : null;
+//
+//        return new IdVerificationResponse(
+//                verifiedYn,
+//                responseCiValue
+//        );
     }
 
     private void validateRequest(IdVerificationRequest request) {
@@ -92,7 +109,7 @@ public class IdVerificationService {
             throw new IllegalArgumentException("본인확인 요청값이 없습니다.");
         }
 
-        if (request.getCreditAppId() == null) {
+        if (request.getAppId() == null) {
             throw new IllegalArgumentException("신청 ID가 없습니다.");
         }
 

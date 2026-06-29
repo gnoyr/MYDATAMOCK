@@ -10,5 +10,6 @@ import com.mydata.domain.FirstScreening;
 public interface FirstScreeningRepository extends JpaRepository<FirstScreening, Long> {
 
 	Optional<FirstScreening> findTopByCreditAppIdOrderByFirstScreeningIdDesc(Long creditAppId);
+	
     List<FirstScreening> findByCreditAppIdOrderByCreatedAtDesc(Long creditAppId);
 }

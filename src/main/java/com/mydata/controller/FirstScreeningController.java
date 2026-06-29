@@ -1,17 +1,12 @@
 package com.mydata.controller;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
+import org.springframework.web.bind.annotation.*;
 import com.mydata.dto.FirstScreeningRequest;
 import com.mydata.dto.FirstScreeningResponse;
 import com.mydata.service.FirstScreeningService;
-
 @RestController
-@RequestMapping("/api/mydata")
+@RequestMapping("/review/request")
 public class FirstScreeningController {
 
     private final FirstScreeningService firstScreeningService;
@@ -20,11 +15,23 @@ public class FirstScreeningController {
         this.firstScreeningService = firstScreeningService;
     }
 
-    @PostMapping("/first-screening")
-    public ResponseEntity<FirstScreeningResponse> firstScreening(
-            @RequestBody FirstScreeningRequest request
-    ) {
-        FirstScreeningResponse response = firstScreeningService.screen(request);
-        return ResponseEntity.ok(response);
+    // 신용카드 1차 심사
+    @PostMapping("/credit/{creditAppId}")
+    public ResponseEntity<FirstScreeningResponse> creditScreening(
+            @PathVariable Long creditAppId,
+            @RequestBody FirstScreeningRequest request) {
+        request.setCreditAppId(creditAppId);
+        FirstScreeningResponse result = firstScreeningService.screen(request);
+        return ResponseEntity.ok(result);
+    }
+
+    // 체크카드 심사
+    @PostMapping("/check/{checkAppId}")
+    public ResponseEntity<FirstScreeningResponse> checkScreening(
+            @PathVariable Long checkAppId,
+            @RequestBody FirstScreeningRequest request) {
+        request.setCreditAppId(checkAppId);
+        FirstScreeningResponse result = firstScreeningService.screen(request);
+        return ResponseEntity.ok(result);
     }
 }

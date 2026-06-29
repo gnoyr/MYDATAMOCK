@@ -1,7 +1,5 @@
 package com.mydata.domain;
 
-import java.time.LocalDateTime;
-
 import jakarta.persistence.*;
 
 @Entity
@@ -15,6 +13,9 @@ public class CreditProfile {
 
     @Column(name = "CREDIT_APP_ID", nullable = false)
     private Long creditAppId;
+
+    @Column(name = "CI_VALUE", nullable = false)
+    private String ciValue;
 
     @Column(name = "CREDIT_SCORE", nullable = false)
     private Integer creditScore;
@@ -34,71 +35,28 @@ public class CreditProfile {
     @Column(name = "MULTI_DEBT_COUNT", nullable = false)
     private Integer multiDebtCount;
 
-    @Column(name = "JOB_TYPE", nullable = false, length = 50)
+    @Column(name = "JOB_TYPE", nullable = false)
     private String jobType;
 
-    @Column(name = "CREATED_AT", nullable = false)
-    private LocalDateTime createdAt;
+    @Column(name = "MONTHLY_PAYMENT", nullable = false)
+    private Long monthlyPayment;
 
-    protected CreditProfile() {
-    }
+    @Column(name = "CREATED_AT", nullable = false, updatable = false)
+    private java.time.LocalDateTime createdAt;
 
-    public CreditProfile(Long creditAppId,
-                         Integer creditScore,
-                         Long estimatedIncome,
-                         Integer carCount,
-                         Long loanBalance,
-                         Double delinquencyRate,
-                         Integer multiDebtCount,
-                         String jobType) {
-        this.creditAppId = creditAppId;
-        this.creditScore = creditScore;
+    public Long getCreditProfileId() { return creditProfileId; }
+    public Long getCreditAppId()     { return creditAppId; }
+    public String getCiValue()       { return ciValue; }
+    public Integer getCreditScore()  { return creditScore; }
+    public Long getEstimatedIncome() { return estimatedIncome; }
+    public Integer getCarCount()     { return carCount; }
+    public Long getLoanBalance()     { return loanBalance; }
+    public Double getDelinquencyRate() { return delinquencyRate; }
+    public Integer getMultiDebtCount() { return multiDebtCount; }
+    public String getJobType()       { return jobType; }
+    public Long getMonthlyPayment()  { return monthlyPayment; }
+
+    public void setEstimatedIncome(Long estimatedIncome) {
         this.estimatedIncome = estimatedIncome;
-        this.carCount = carCount;
-        this.loanBalance = loanBalance;
-        this.delinquencyRate = delinquencyRate;
-        this.multiDebtCount = multiDebtCount;
-        this.jobType = jobType;
-        this.createdAt = LocalDateTime.now();
-    }
-
-    public Long getCreditProfileId() {
-        return creditProfileId;
-    }
-
-    public Long getCreditAppId() {
-        return creditAppId;
-    }
-
-    public Integer getCreditScore() {
-        return creditScore;
-    }
-
-    public Long getEstimatedIncome() {
-        return estimatedIncome;
-    }
-
-    public Integer getCarCount() {
-        return carCount;
-    }
-
-    public Long getLoanBalance() {
-        return loanBalance;
-    }
-
-    public Double getDelinquencyRate() {
-        return delinquencyRate;
-    }
-
-    public Integer getMultiDebtCount() {
-        return multiDebtCount;
-    }
-
-    public String getJobType() {
-        return jobType;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
     }
 }

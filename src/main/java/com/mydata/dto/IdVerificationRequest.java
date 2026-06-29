@@ -2,7 +2,7 @@ package com.mydata.dto;
 
 public class IdVerificationRequest {
 
-    private Long creditAppId;
+    private Long appId;
     private String idType;
     private String idName;
 
@@ -11,12 +11,12 @@ public class IdVerificationRequest {
     private String idAddress;
     private String idIssueDate;
 
-    public Long getCreditAppId() {
-        return creditAppId;
+    public Long getAppId() {
+        return appId;
     }
 
-    public void setCreditAppId(Long creditAppId) {
-        this.creditAppId = creditAppId;
+    public void setAppId(Long appId) {
+        this.appId = appId;
     }
 
     public String getIdType() {

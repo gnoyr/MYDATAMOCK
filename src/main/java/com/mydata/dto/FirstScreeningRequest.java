@@ -8,8 +8,26 @@ public class FirstScreeningRequest {
     private String incomeDocKey;
     private String assetDocKey;
     private String jobDocKey;
+    private String ciValue;
+    private Long requestedLimit;
 
-    public Long getCreditAppId() {
+    public String getCiValue() {
+		return ciValue;
+	}
+
+	public void setCiValue(String ciValue) {
+		this.ciValue = ciValue;
+	}
+
+	public Long getRequestedLimit() {
+		return requestedLimit;
+	}
+
+	public void setRequestedLimit(Long requestedLimit) {
+		this.requestedLimit = requestedLimit;
+	}
+
+	public Long getCreditAppId() {
         return creditAppId;
     }
 

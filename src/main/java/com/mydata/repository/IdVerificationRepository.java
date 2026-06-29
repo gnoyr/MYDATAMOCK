@@ -8,5 +8,5 @@ import com.mydata.domain.IdVerification;
 
 public interface IdVerificationRepository extends JpaRepository<IdVerification, Long> {
 
-    List<IdVerification> findByCreditAppId(Long creditAppId);
+	List<IdVerification> findByAppId(Long appId);
 }

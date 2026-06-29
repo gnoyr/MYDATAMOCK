@@ -10,7 +10,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "MYDATA_ID_VERIFICATION")
+@Table(name = "MYDATA_ID_VERIFICATIONS")
 public class IdVerification {
 
     @Id
@@ -18,8 +18,8 @@ public class IdVerification {
     @Column(name = "ID_VERIFICATION_ID")
     private Long idVerificationId;
 
-    @Column(name = "CREDIT_APP_ID", nullable = false)
-    private Long creditAppId;
+    @Column(name = "APP_ID", nullable = false)
+    private Long appId;
 
     @Column(name = "ID_TYPE", nullable = false, length = 30)
     private String idType;
@@ -55,7 +55,7 @@ public class IdVerification {
     protected IdVerification() {
     }
 
-    public IdVerification(Long creditAppId,
+    public IdVerification(Long appId,
                           String idType,
                           String idName,
                           String idResidentNo,
@@ -65,7 +65,7 @@ public class IdVerification {
                           Long matchedIdentityId,
                           String idVerifiedYn,
                           String failReason) {
-        this.creditAppId = creditAppId;
+        this.appId = appId;
         this.idType = idType;
         this.idName = idName;
         this.idResidentNo = idResidentNo;
@@ -82,8 +82,8 @@ public class IdVerification {
         return idVerificationId;
     }
 
-    public Long getCreditAppId() {
-        return creditAppId;
+    public Long getAppId() {
+        return appId;
     }
 
     public String getIdType() {
