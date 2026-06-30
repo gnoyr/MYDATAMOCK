@@ -35,3 +35,21 @@ out/
 
 ### VS Code ###
 .vscode/
+
+### 민감 설정 파일 ###
+**/application-local.properties
+**/application-prod.properties
+**/application-local.yml
+**/application-prod.yml
+
+### 인증서·키 ###
+*.p12
+*.jks
+*.pem
+*.key
+*.crt
+**/service-account.json
+
+### 로그 ###
+*.log
+logs/

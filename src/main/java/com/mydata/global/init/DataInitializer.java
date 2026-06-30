@@ -49,7 +49,8 @@ public class DataInitializer implements ApplicationRunner {
             780, 3_000_000L, 1,
             8_000_000L, 0.5, 0,
             "EMPLOYED", 700_000L,
-            48_000_000L   // 연소득 (홈택스)
+            48_000_000L,  // 연소득 (홈택스)
+            "EMPLOYMENT"  // 홈택스 소득 유형
         ),
         new TestUser(
             "김영희", "920315", "2",
@@ -57,8 +58,9 @@ public class DataInitializer implements ApplicationRunner {
             "20190601", "RESIDENT_ID",
             650, 1_800_000L, 0,
             3_000_000L, 2.0, 1,
-            "SELF_EMPLOYED", 600_000L,
-            21_600_000L   // 연소득 (홈택스)
+            "BUSINESS", 600_000L,
+            21_600_000L,  // 연소득 (홈택스)
+            "BUSINESS"    // 홈택스 소득 유형
         )
     );
 
@@ -127,7 +129,7 @@ public class DataInitializer implements ApplicationRunner {
         int currentYear = LocalDateTime.now().getYear();
         HometaxIncome income = new HometaxIncome(
                 0L, ciValue, currentYear - 1,
-                "EARNED_INCOME", u.annualIncome, "SUCCESS", null);
+                u.incomeType, u.annualIncome, "SUCCESS", null);
         hometaxIncomeRepository.save(income);
         log.info("[DataInitializer] HOMETAX_INCOME seed 완료: name={}, year={}", u.name, currentYear - 1);
     }
@@ -148,6 +150,7 @@ public class DataInitializer implements ApplicationRunner {
         Integer multiDebtCount,
         String jobType,
         Long monthlyPayment,
-        Long annualIncome
+        Long annualIncome,
+        String incomeType
     ) {}
 }

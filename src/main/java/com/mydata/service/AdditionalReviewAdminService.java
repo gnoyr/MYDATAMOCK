@@ -10,6 +10,8 @@ import com.mydata.repository.CreditProfileRepository;
 import com.mydata.repository.HometaxIncomeRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
@@ -29,6 +31,9 @@ public class AdditionalReviewAdminService {
 
     @Value("${bnk.server.url}")
     private String bnkServerUrl;
+
+    @Value("${internal.callback.secret}")
+    private String callbackSecret;
 
     public AdditionalReviewAdminService(AdditionalReviewRepository additionalReviewRepository,
                                         CreditProfileRepository creditProfileRepository,
@@ -135,9 +140,12 @@ public class AdditionalReviewAdminService {
 
     private void sendCallback(AdditionalReviewResultCallbackRequest request) {
         try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("X-Internal-Secret", callbackSecret);
+            HttpEntity<AdditionalReviewResultCallbackRequest> entity = new HttpEntity<>(request, headers);
             restTemplate.postForEntity(
                     bnkServerUrl + "/api/callback/credit/review-result",
-                    request,
+                    entity,
                     Void.class
             );
             log.info("[추가심사] BNK 콜백 전송 완료: creditAppId={}, status={}",
