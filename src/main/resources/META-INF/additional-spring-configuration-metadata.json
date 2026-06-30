@@ -1,0 +1,22 @@
+{"properties": [
+  {
+    "name": "bnk.server.url",
+    "type": "java.lang.String",
+    "description": "BNKcard 서버의 기본 URL. 추가심사 결과 콜백 등 BNKcard 로 요청을 보낼 때 사용합니다. 예: http://localhost:8088"
+  },
+  {
+    "name": "bnkcard.api.base-url",
+    "type": "java.lang.String",
+    "description": "BNKcard API 의 base URL 설정."
+  },
+  {
+    "name": "ci.salt",
+    "type": "java.lang.String",
+    "description": "CI 생성용 Salt. BNKcard 와 동일한 값으로 설정해야 동일한 CI 값이 생성됩니다."
+  },
+  {
+    "name": "internal.callback.secret",
+    "type": "java.lang.String",
+    "description": "내부 서버 간 콜백 인증 시크릿. BNKcard 로 콜백 요청 시 인증에 사용하는 공유 비밀 값으로, 양쪽에 동일한 값을 설정합니다. 외부에 노출되지 않도록 주의합니다."
+  }
+]}
