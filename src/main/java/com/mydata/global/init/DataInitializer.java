@@ -45,6 +45,7 @@ public class DataInitializer implements ApplicationRunner {
         new TestUser(
             "홍길동", "900101", "1",
             "서울특별시 강남구 테헤란로 123",
+            "01011112222",
             "20200101", "RESIDENT_ID",
             780, 3_000_000L, 1,
             8_000_000L, 0.5, 0,
@@ -55,6 +56,7 @@ public class DataInitializer implements ApplicationRunner {
         new TestUser(
             "김영희", "920315", "2",
             "부산광역시 해운대구 해운대로 456",
+            "01033334444",
             "20190601", "RESIDENT_ID",
             650, 1_800_000L, 0,
             3_000_000L, 2.0, 1,
@@ -67,9 +69,20 @@ public class DataInitializer implements ApplicationRunner {
     @Override
     @Transactional
     public void run(ApplicationArguments args) {
+        // 멱등 재시드: CI 공식이 바뀌어도 재기동마다 충돌 없이 다시 시드되도록
+        // 기존 시드 더미를 먼저 정리한다.
+        //  - HOMETAX/CREDIT_PROFILE: 더미 마커 credit_app_id=0 행만 삭제 (실제 심사 행은 credit_app_id≠0 → 보존)
+        //  - IDENTITY_MASTER: 테스트 신원(주민번호 기준)만 삭제 (시드 전용 테이블)
+        hometaxIncomeRepository.deleteByCreditAppId(0L);
+        creditProfileRepository.deleteByCreditAppId(0L);
         for (TestUser u : TEST_USERS) {
+            identityMasterRepository.deleteByIdResidentNo(u.residentFront + u.genderCode);
+        }
+
+        for (TestUser u : TEST_USERS) {
+            // CI = 이름 + 생년월일(주민번호 앞6) + 전화번호 (BNKcard와 동일 공식)
             String ciValue = ciValueGenerator.generate(
-                    u.name, u.residentFront, u.genderCode, u.address);
+                    u.name, u.residentFront, u.phone);
 
             seedIdentityMaster(u, ciValue);
             seedCreditProfile(u, ciValue);
@@ -140,6 +153,7 @@ public class DataInitializer implements ApplicationRunner {
         String residentFront,
         String genderCode,
         String address,
+        String phone,
         String issueDate,
         String idType,
         Integer creditScore,
