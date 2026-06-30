@@ -1,42 +1,33 @@
 package com.mydata.service;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.RestTemplate;
-
+import com.mydata.domain.AdditionalReview;
 import com.mydata.domain.CreditProfile;
 import com.mydata.domain.FirstScreening;
-import com.mydata.dto.AdditionalReviewResultCallbackRequest;
+import com.mydata.repository.AdditionalReviewRepository;
 import com.mydata.repository.CreditProfileRepository;
 import com.mydata.repository.FirstScreeningRepository;
-
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
 public class AdditionalScreeningService {
 
-    private static final String REVIEWED_BY       = "BNK심사센터";
-    private static final long   MAX_APPROVED_LIMIT = 2_000_000L;
+    private final AdditionalReviewRepository additionalReviewRepository;
+    private final FirstScreeningRepository   firstScreeningRepository;
+    private final CreditProfileRepository    creditProfileRepository;
 
-    private final FirstScreeningRepository firstScreeningRepository;
-    private final CreditProfileRepository  creditProfileRepository;
-    private final RestTemplate             restTemplate;
-
-    @Value("${bnk.server.url}")
-    private String bnkServerUrl;
-
-    public AdditionalScreeningService(FirstScreeningRepository firstScreeningRepository,
-            CreditProfileRepository creditProfileRepository,
-            RestTemplate restTemplate) {
-    	this.firstScreeningRepository = firstScreeningRepository;
-		this.creditProfileRepository  = creditProfileRepository;
-		this.restTemplate             = restTemplate;
-	}
+    public AdditionalScreeningService(AdditionalReviewRepository additionalReviewRepository,
+                                      FirstScreeningRepository firstScreeningRepository,
+                                      CreditProfileRepository creditProfileRepository) {
+        this.additionalReviewRepository = additionalReviewRepository;
+        this.firstScreeningRepository   = firstScreeningRepository;
+        this.creditProfileRepository    = creditProfileRepository;
+    }
 
     @Transactional
-    public void screen(Long creditAppId) {
+    public void screen(Long creditAppId, String ciValueFromRequest) {
         if (creditAppId == null) {
             throw new IllegalArgumentException("신청 ID가 없습니다.");
         }
@@ -45,61 +36,36 @@ public class AdditionalScreeningService {
                 .findTopByCreditAppIdOrderByFirstScreeningIdDesc(creditAppId)
                 .orElse(null);
 
-        CreditProfile creditProfile = creditProfileRepository
-                .findTopByCreditAppIdOrderByCreditProfileIdDesc(creditAppId)
-                .orElse(null);
-
-        String applicationStatus;
-        Long   approvedLimit;
-        String rejectionReason;
-
-        if (firstScreening == null) {
-            applicationStatus = "REJECTED";
-            approvedLimit     = null;
-            rejectionReason   = "1차 심사 내역이 없습니다.";
-        } else if (!"PASS".equals(firstScreening.getScreeningResult())) {
-            applicationStatus = "REJECTED";
-            approvedLimit     = null;
-            rejectionReason   = "1차 심사 결과가 PASS가 아닙니다.";
-        } else if (creditProfile == null) {
-            applicationStatus = "REJECTED";
-            approvedLimit     = null;
-            rejectionReason   = "마이데이터 신용 프로필이 없습니다.";
-        } else if (creditProfile.getDelinquencyRate() != null
-                && creditProfile.getDelinquencyRate() > 0) {
-            applicationStatus = "REJECTED";
-            approvedLimit     = null;
-            rejectionReason   = "연체 이력이 존재합니다.";
-        } else if (creditProfile.getMultiDebtCount() != null
-                && creditProfile.getMultiDebtCount() >= 5) {
-            applicationStatus = "REJECTED";
-            approvedLimit     = null;
-            rejectionReason   = "다중채무건수가 기준을 초과했습니다.";
-        } else {
-            applicationStatus = "APPROVED";
-            approvedLimit     = MAX_APPROVED_LIMIT;
-            rejectionReason   = null;
+        // ciValue: BNKcard 본인인증 시 생성된 값을 요청에서 직접 받음
+        String ciValue = (ciValueFromRequest != null && !ciValueFromRequest.isBlank())
+                ? ciValueFromRequest : "";
+        if (ciValue.isBlank()) {
+            log.warn("[추가심사] ciValue 없음, creditAppId={}", creditAppId);
         }
 
-        AdditionalReviewResultCallbackRequest result = new AdditionalReviewResultCallbackRequest(
-                creditAppId,
-                applicationStatus,
-                approvedLimit,
-                rejectionReason,
-                REVIEWED_BY
+        String incomeDocKey = firstScreening != null ? firstScreening.getIncomeDocKey() : null;
+        String assetDocKey  = firstScreening != null ? firstScreening.getAssetDocKey()  : null;
+        String jobDocKey    = firstScreening != null ? firstScreening.getJobDocKey()    : null;
+
+        AdditionalReview review = new AdditionalReview(
+                creditAppId, ciValue, incomeDocKey, assetDocKey, jobDocKey
         );
-        sendCallbackToBnk(result);
+        additionalReviewRepository.save(review);
+
+        log.info("[추가심사] PENDING 저장 완료: creditAppId={}, ciValue존재={}", creditAppId, !ciValue.isBlank());
     }
-    
-    private void sendCallbackToBnk(AdditionalReviewResultCallbackRequest result) {
-        try {
-            restTemplate.postForEntity(
-                bnkServerUrl + "/api/callback/credit/review-result",
-                result,
-                Void.class
-            );
-        } catch (Exception e) {
-            log.error("[추가 심사] BNK 콜백 실패: creditAppId={}", result.getAppId(), e);
+
+    @Transactional
+    public void updateDocs(Long creditAppId, String incomeDocKey, String assetDocKey, String jobDocKey) {
+        AdditionalReview review = additionalReviewRepository
+                .findTopByCreditAppIdOrderByAdditionalReviewIdDesc(creditAppId)
+                .orElseThrow(() -> new IllegalArgumentException("추가심사 요청을 찾을 수 없습니다: " + creditAppId));
+
+        if (!"PENDING".equals(review.getStatus())) {
+            throw new IllegalStateException("이미 처리된 추가심사 요청입니다: " + creditAppId);
         }
+
+        review.updateDocs(incomeDocKey, assetDocKey, jobDocKey);
+        log.info("[추가심사] 서류 재제출 완료: creditAppId={}", creditAppId);
     }
 }

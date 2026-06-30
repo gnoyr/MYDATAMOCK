@@ -20,7 +20,7 @@ public class FirstScreeningController {
     public ResponseEntity<FirstScreeningResponse> creditScreening(
             @PathVariable Long creditAppId,
             @RequestBody FirstScreeningRequest request) {
-        request.setCreditAppId(creditAppId);
+        request.setAppId(creditAppId);
         FirstScreeningResponse result = firstScreeningService.screen(request);
         return ResponseEntity.ok(result);
     }
@@ -30,7 +30,7 @@ public class FirstScreeningController {
     public ResponseEntity<FirstScreeningResponse> checkScreening(
             @PathVariable Long checkAppId,
             @RequestBody FirstScreeningRequest request) {
-        request.setCreditAppId(checkAppId);
+        request.setAppId(checkAppId);
         FirstScreeningResponse result = firstScreeningService.screen(request);
         return ResponseEntity.ok(result);
     }

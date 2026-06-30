@@ -1,7 +1,5 @@
 package com.mydata.service;
 
-import java.util.Optional;
-
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,95 +11,61 @@ import com.mydata.global.util.CiValueGenerator;
 import com.mydata.repository.IdVerificationRepository;
 import com.mydata.repository.IdentityMasterRepository;
 
+import java.util.Optional;
+
 @Service
 public class IdVerificationService {
 
     private final IdVerificationRepository idVerificationRepository;
     private final IdentityMasterRepository identityMasterRepository;
-    private final CiValueGenerator ciValueGenerator;
+    private final CiValueGenerator         ciValueGenerator;
 
     public IdVerificationService(IdVerificationRepository idVerificationRepository,
                                  IdentityMasterRepository identityMasterRepository,
                                  CiValueGenerator ciValueGenerator) {
         this.idVerificationRepository = idVerificationRepository;
-        this.identityMasterRepository = identityMasterRepository;
-        this.ciValueGenerator = ciValueGenerator;
+        this.identityMasterRepository  = identityMasterRepository;
+        this.ciValueGenerator          = ciValueGenerator;
     }
 
     @Transactional
     public IdVerificationResponse verifyIdentity(IdVerificationRequest request) {
         validateRequest(request);
 
-        String residentNo = extractResidentKey(request.getIdResidentNo());
+        String residentNo    = extractResidentKey(request.getIdResidentNo());
         String residentFront = residentNo.substring(0, 6);
-        String genderCode = residentNo.substring(6, 7);
-        String issueDate = normalizeIssueDate(request.getIdIssueDate());
+        String genderCode    = residentNo.substring(6, 7);
+        String issueDate     = normalizeIssueDate(request.getIdIssueDate());
 
         String generatedCiValue = ciValueGenerator.generate(
-                request.getIdName(),
-                residentFront,
-                genderCode,
-                request.getIdAddress()
-        );
-        
-        // TODO: 임시 처리 — MYDATA_IDENTITY_MASTER 연동 전까지 무조건 Y 반환
+                request.getIdName(), residentFront, genderCode, request.getIdAddress());
+
+        // MYDATA_IDENTITY_MASTER 대조: 생성된 CI가 등록된 신원과 일치하는지 확인
+        Optional<IdentityMaster> matchedIdentity = identityMasterRepository
+                .findByCiValueAndStatus(generatedCiValue, "ACTIVE");
+
+        String verifiedYn        = matchedIdentity.isPresent() ? "Y" : "N";
+        Long   matchedIdentityId = matchedIdentity.map(IdentityMaster::getIdentityId).orElse(null);
+        String failReason        = matchedIdentity.isPresent()
+                ? null : "신원 원장 정보와 일치하지 않습니다.";
+
         IdVerification entity = new IdVerification(
                 request.getAppId(),
                 normalize(request.getIdType()),
                 normalize(request.getIdName()),
                 residentNo,
                 normalizeAddress(request.getIdAddress()),
-                normalizeIssueDate(request.getIdIssueDate()),
+                issueDate,
                 generatedCiValue,
-                null,
-                "Y",
-                null
+                matchedIdentityId,
+                verifiedYn,
+                failReason
         );
         idVerificationRepository.save(entity);
 
-        return new IdVerificationResponse("Y", generatedCiValue);
-
-//        Optional<IdentityMaster> matchedIdentity = identityMasterRepository
-//                .findFirstByCiValueAndIdTypeAndIdIssueDateAndStatus(
-//                        generatedCiValue,
-//                        normalize(request.getIdType()),
-//                        issueDate,
-//                        "ACTIVE"
-//                );
-//
-//        String verifiedYn = matchedIdentity.isPresent() ? "Y" : "N";
-//
-//        Long matchedIdentityId = matchedIdentity
-//                .map(IdentityMaster::getIdentityId)
-//                .orElse(null);
-//
-//        String failReason = matchedIdentity.isPresent()
-//                ? null
-//                : "신원 원장 정보와 일치하지 않습니다.";
-//
-//        IdVerification entity = new IdVerification(
-//                request.getAppId(),
-//                normalize(request.getIdType()),
-//                normalize(request.getIdName()),
-//                residentNo,
-//                normalizeAddress(request.getIdAddress()),
-//                issueDate,
-//                generatedCiValue,
-//                matchedIdentityId,
-//                verifiedYn,
-//                failReason
-//        );
-//
-//        idVerificationRepository.save(entity);
-//
-//        String responseCiValue = matchedIdentity.isPresent()
-//                ? generatedCiValue
-//                : null;
-//
-//        return new IdVerificationResponse(
-//                verifiedYn,
-//                responseCiValue
-//        );
+        // 미인증이면 CI값 반환하지 않음
+        String responseCiValue = matchedIdentity.isPresent() ? generatedCiValue : null;
+        return new IdVerificationResponse(verifiedYn, responseCiValue);
     }
 
     private void validateRequest(IdVerificationRequest request) {

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>추가심사 대기 목록</title>
+    <style>
+        body { font-family: 'Malgun Gothic', sans-serif; max-width: 900px; margin: 40px auto; padding: 0 20px; }
+        h1 { font-size: 22px; margin-bottom: 20px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid #ccc; padding: 10px 14px; text-align: left; font-size: 14px; }
+        th { background: #f4f4f4; }
+        a.btn { display: inline-block; padding: 6px 14px; background: #2563eb; color: #fff;
+                border-radius: 4px; text-decoration: none; font-size: 13px; }
+        .empty { color: #888; text-align: center; padding: 30px; }
+        .alert-success { background: #d1fae5; border: 1px solid #6ee7b7; padding: 10px 16px;
+                         border-radius: 4px; margin-bottom: 16px; color: #065f46; }
+    </style>
+</head>
+<body>
+    <h1>추가심사 대기 목록</h1>
+
+    <div class="alert-success" th:if="${successMsg}" th:text="${successMsg}"></div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>신청 ID</th>
+                <th>소득서류</th>
+                <th>재산서류</th>
+                <th>직업서류</th>
+                <th>요청일시</th>
+                <th>처리</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:if="${#lists.isEmpty(reviews)}">
+                <td colspan="6" class="empty">대기 중인 추가심사가 없습니다.</td>
+            </tr>
+            <tr th:each="r : ${reviews}">
+                <td th:text="${r.creditAppId}"></td>
+                <td>
+                    <a th:if="${r.incomeDocKey != null}"
+                       th:href="${bnkServerUrl + '/api/applications/credit/docs/download?key=' + r.incomeDocKey}"
+                       target="_blank" style="color:#2563eb;font-size:13px;">보기</a>
+                    <span th:if="${r.incomeDocKey == null}" style="color:#9ca3af;">-</span>
+                </td>
+                <td>
+                    <a th:if="${r.assetDocKey != null}"
+                       th:href="${bnkServerUrl + '/api/applications/credit/docs/download?key=' + r.assetDocKey}"
+                       target="_blank" style="color:#2563eb;font-size:13px;">보기</a>
+                    <span th:if="${r.assetDocKey == null}" style="color:#9ca3af;">-</span>
+                </td>
+                <td>
+                    <a th:if="${r.jobDocKey != null}"
+                       th:href="${bnkServerUrl + '/api/applications/credit/docs/download?key=' + r.jobDocKey}"
+                       target="_blank" style="color:#2563eb;font-size:13px;">보기</a>
+                    <span th:if="${r.jobDocKey == null}" style="color:#9ca3af;">-</span>
+                </td>
+                <td th:text="${#temporals.format(r.createdAt, 'yyyy-MM-dd HH:mm')}"></td>
+                <td><a class="btn" th:href="@{/admin/review/{id}(id=${r.creditAppId})}">심사하기</a></td>
+            </tr>
+        </tbody>
+    </table>
+</body>
+</html>

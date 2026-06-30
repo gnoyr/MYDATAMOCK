@@ -2,7 +2,7 @@ package com.mydata.dto;
 
 public class FirstScreeningRequest {
 
-    private Long creditAppId;
+    private Long appId;
     private String annualIncomeBand;
     private String creditScoreBand;
     private String incomeDocKey;
@@ -27,12 +27,12 @@ public class FirstScreeningRequest {
 		this.requestedLimit = requestedLimit;
 	}
 
-	public Long getCreditAppId() {
-        return creditAppId;
+	public Long getAppId() {
+        return appId;
     }
 
-    public void setCreditAppId(Long creditAppId) {
-        this.creditAppId = creditAppId;
+    public void setAppId(Long appId) {
+        this.appId = appId;
     }
 
     public String getAnnualIncomeBand() {

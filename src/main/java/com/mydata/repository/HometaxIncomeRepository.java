@@ -18,4 +18,10 @@ public interface HometaxIncomeRepository extends JpaRepository<HometaxIncome, Lo
            ") " +
            "AND h.queryStatus = 'SUCCESS'")
     List<HometaxIncome> findLatestYearByCiValue(@Param("ciValue") String ciValue);
+
+    // creditAppId 기준 NO_DATA/FAILED 레코드 조회 (서류 심사 통과 시 업데이트 대상)
+    @Query("SELECT h FROM HometaxIncome h " +
+           "WHERE h.creditAppId = :creditAppId " +
+           "AND h.queryStatus IN ('NO_DATA', 'FAILED')")
+    List<HometaxIncome> findUnverifiedByCreditAppId(@Param("creditAppId") Long creditAppId);
 }

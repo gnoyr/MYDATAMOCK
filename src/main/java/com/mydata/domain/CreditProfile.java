@@ -56,6 +56,25 @@ public class CreditProfile {
     public String getJobType()       { return jobType; }
     public Long getMonthlyPayment()  { return monthlyPayment; }
 
+    public CreditProfile(Long creditAppId, String ciValue, Integer creditScore,
+                         Long estimatedIncome, Integer carCount, Long loanBalance,
+                         Double delinquencyRate, Integer multiDebtCount,
+                         String jobType, Long monthlyPayment) {
+        this.creditAppId    = creditAppId;
+        this.ciValue        = ciValue;
+        this.creditScore    = creditScore;
+        this.estimatedIncome = estimatedIncome;
+        this.carCount       = carCount;
+        this.loanBalance    = loanBalance;
+        this.delinquencyRate = delinquencyRate;
+        this.multiDebtCount = multiDebtCount;
+        this.jobType        = jobType;
+        this.monthlyPayment = monthlyPayment;
+        this.createdAt      = java.time.LocalDateTime.now();
+    }
+
+    protected CreditProfile() {}
+
     public void setEstimatedIncome(Long estimatedIncome) {
         this.estimatedIncome = estimatedIncome;
     }
