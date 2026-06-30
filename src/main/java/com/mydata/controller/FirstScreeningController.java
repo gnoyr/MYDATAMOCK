@@ -31,7 +31,7 @@ public class FirstScreeningController {
             @PathVariable Long checkAppId,
             @RequestBody FirstScreeningRequest request) {
         request.setAppId(checkAppId);
-        FirstScreeningResponse result = firstScreeningService.screen(request);
+        FirstScreeningResponse result = firstScreeningService.screenCheck(request);
         return ResponseEntity.ok(result);
     }
 }
