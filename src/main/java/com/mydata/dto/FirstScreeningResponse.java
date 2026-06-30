@@ -11,6 +11,7 @@ public class FirstScreeningResponse {
 
     // 신용 프로필 (PASS일 때만 값 있음, REJECTED면 null)
     private Long estimatedMonthlyIncome;  // 월추정소득 (홈택스 계산값)
+    private Long monthlyPayment;  		  // 월 납부액 (기존 대출 상환액)
     private Integer creditScore;          // 신용점수
     private Integer vehicleCount;         // 차량 보유 수
     private Long loanBalance;             // 대출 잔액
@@ -41,6 +42,7 @@ public class FirstScreeningResponse {
                                   String rejectionReason,
                                   String reviewedBy,
                                   Long estimatedMonthlyIncome,
+                                  Long monthlyPayment,
                                   Integer creditScore,
                                   Integer vehicleCount,
                                   Long loanBalance,
@@ -54,6 +56,7 @@ public class FirstScreeningResponse {
         this.rejectionReason = rejectionReason;
         this.reviewedBy = reviewedBy;
         this.estimatedMonthlyIncome = estimatedMonthlyIncome;
+        this.monthlyPayment = monthlyPayment;
         this.creditScore = creditScore;
         this.vehicleCount = vehicleCount;
         this.loanBalance = loanBalance;
@@ -69,9 +72,10 @@ public class FirstScreeningResponse {
     public String getRejectionReason() { return rejectionReason; }
     public String getReviewedBy() { return reviewedBy; }
     public Long getEstimatedMonthlyIncome() { return estimatedMonthlyIncome; }
+    public Long getMonthlyPayment() { return monthlyPayment; }
     public Integer getCreditScore() { return creditScore; }
     public Integer getVehicleCount() { return vehicleCount; }
-    public Long getLoanBalance() { return loanBalance; }
+	public Long getLoanBalance() { return loanBalance; }
     public Double getDelinquencyRate() { return delinquencyRate; }
     public Integer getMultipleDebtCount() { return multipleDebtCount; }
     public String getJobType() { return jobType; }

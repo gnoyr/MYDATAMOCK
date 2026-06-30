@@ -18,8 +18,6 @@ import java.util.Optional;
 public class FirstScreeningService {
 
     private static final String REVIEWED_BY         = "BNK심사센터";
-    private static final int    MIN_CREDIT_SCORE     = 600;
-    private static final long   MIN_DISPOSABLE_INCOME = 500000L;  // 월가처분소득 최소 50만원
 
     private final FirstScreeningRepository firstScreeningRepository;
     private final CreditProfileRepository  creditProfileRepository;
@@ -42,49 +40,30 @@ public class FirstScreeningService {
                 .findByCiValue(request.getCiValue())
                 .orElseThrow(() -> new IllegalArgumentException("신용프로필을 찾을 수 없습니다."));
 
-        FirstScreeningResponse result;
-
-        // ── 2단계. 신용점수 체크 (600점 이하 즉시 거절) ───────────
-        if (creditProfile.getCreditScore() <= MIN_CREDIT_SCORE) {
-            result = saveAndReturn(request, creditProfile,
-                    ScreeningDecision.rejected("Y", "신용점수가 심사 기준에 부합하지 않습니다."));
-
-        // ── 3단계. 서류 검증 ──────────────────────────────────────
-        } else if (!isDocumentVerified(request)) {
-            result = saveAndReturn(request, creditProfile,
-                    ScreeningDecision.rejected("N", "서류 키 형식이 올바르지 않습니다."));
-
-        // ── 4단계. 홈택스 조회 → 월추정소득 계산 ─────────────────
-        } else {
-            Optional<Long> estimatedMonthlyIncomeOpt = calculateEstimatedMonthlyIncome(request);
-
-            // 소득 없음 → BNK 서버에서 MANUAL_REQUIRED로 처리
-            if (estimatedMonthlyIncomeOpt.isEmpty()) {
-                result = saveAndReturn(request, creditProfile, ScreeningDecision.pass());
-
-            } else {
-                long estimatedMonthlyIncome = estimatedMonthlyIncomeOpt.get();
-
-                // ── 5단계. 월가처분소득 체크 ──────────────────────────────
-                long disposableIncome = estimatedMonthlyIncome - creditProfile.getMonthlyPayment();
-                if (disposableIncome <= MIN_DISPOSABLE_INCOME) {
-                    result = saveAndReturn(request, creditProfile,
-                            ScreeningDecision.rejected("Y", "월 가처분소득이 심사 기준에 부합하지 않습니다."));
-
-                // ── 6단계. CREDIT_PROFILE ESTIMATED_INCOME 업데이트 ──────
-                } else {
-                    creditProfile.setEstimatedIncome(estimatedMonthlyIncome);
-                    creditProfileRepository.updateEstimatedIncome(request.getCiValue(), estimatedMonthlyIncome);
-
-                    // ── 7단계. PASS → 신용프로필 전체 응답 ───────────────────
-                    result = saveAndReturn(request, creditProfile, ScreeningDecision.pass());
-                }
-            }
+        // ── 2단계. 서류 검증 ──────────────────────────────────────
+        // 서류 키 형식만 검증 (OCI/ 시작 여부)
+        // 신용점수·소득 판단은 BNK 서버에서 처리
+        if (!isDocumentVerified(request)) {
+        	throw new IllegalArgumentException("서류 키 형식이 올바르지 않습니다.");
         }
 
-        return result;
-    }
+        // ── 3단계. 홈택스 조회 → 월추정소득 계산 ─────────────────
+        Optional<Long> estimatedMonthlyIncomeOpt = calculateEstimatedMonthlyIncome(request);
 
+        // ── 4단계. 소득 있으면 CREDIT_PROFILE 업데이트 ───────────
+        // 소득 없어도 거절하지 않고 BNK 서버로 전달 (BNK에서 MANUAL_REQUIRED 처리)
+        if (estimatedMonthlyIncomeOpt.isPresent()) {
+            long estimatedMonthlyIncome = estimatedMonthlyIncomeOpt.get();
+            creditProfile.setEstimatedIncome(estimatedMonthlyIncome);
+            creditProfileRepository.updateEstimatedIncome(request.getCiValue(), estimatedMonthlyIncome);
+        }
+
+        // ── 5단계. 신용프로필 전체를 BNK로 전달 ──────────────────
+        // 신용점수·가처분소득·연체율 등 모든 판단은 BNK 서버에서 수행
+        return saveAndReturn(request, creditProfile, ScreeningDecision.pass());
+    }
+    
+    
     // ── 홈택스 조회 및 월추정소득 계산 ────────────────────────────
     private Optional<Long> calculateEstimatedMonthlyIncome(FirstScreeningRequest request) {
         List<HometaxIncome> incomeList = hometaxIncomeRepository
@@ -142,6 +121,7 @@ public class FirstScreeningService {
                 decision.rejectionReason,
                 REVIEWED_BY,
                 creditProfile.getEstimatedIncome(),
+                creditProfile.getMonthlyPayment(),
                 creditProfile.getCreditScore(),
                 creditProfile.getCarCount(),
                 creditProfile.getLoanBalance(),
@@ -217,11 +197,7 @@ public class FirstScreeningService {
         }
 
         private static ScreeningDecision pass() {
-            return new ScreeningDecision("PASS", "Y", "APPROVED", null);
-        }
-
-        private static ScreeningDecision rejected(String docVerifiedYn, String rejectionReason) {
-            return new ScreeningDecision("REJECTED", docVerifiedYn, "REJECTED", rejectionReason);
+            return new ScreeningDecision("PASS", "Y", "REVIEWING", null);
         }
     }
 }
