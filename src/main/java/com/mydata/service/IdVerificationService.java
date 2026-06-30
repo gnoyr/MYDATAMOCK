@@ -34,11 +34,11 @@ public class IdVerificationService {
 
         String residentNo    = extractResidentKey(request.getIdResidentNo());
         String residentFront = residentNo.substring(0, 6);
-        String genderCode    = residentNo.substring(6, 7);
         String issueDate     = normalizeIssueDate(request.getIdIssueDate());
 
+        // CI = 이름 + 생년월일(주민번호 앞6 = YYMMDD) + 전화번호 (BNKcard와 동일 공식)
         String generatedCiValue = ciValueGenerator.generate(
-                request.getIdName(), residentFront, genderCode, request.getIdAddress());
+                request.getIdName(), residentFront, request.getIdPhone());
 
         // MYDATA_IDENTITY_MASTER 대조: 생성된 CI가 등록된 신원과 일치하는지 확인
         Optional<IdentityMaster> matchedIdentity = identityMasterRepository
@@ -91,6 +91,10 @@ public class IdVerificationService {
 
         if (!hasText(request.getIdAddress())) {
             throw new IllegalArgumentException("주소가 없습니다.");
+        }
+
+        if (!hasText(request.getIdPhone())) {
+            throw new IllegalArgumentException("전화번호가 없습니다.");
         }
 
         if (!hasText(request.getIdIssueDate())) {

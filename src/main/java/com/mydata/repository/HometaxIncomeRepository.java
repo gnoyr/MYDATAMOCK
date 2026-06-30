@@ -24,4 +24,7 @@ public interface HometaxIncomeRepository extends JpaRepository<HometaxIncome, Lo
            "WHERE h.creditAppId = :creditAppId " +
            "AND h.queryStatus IN ('NO_DATA', 'FAILED')")
     List<HometaxIncome> findUnverifiedByCreditAppId(@Param("creditAppId") Long creditAppId);
+
+    // 시드 더미(credit_app_id=0) 정리용 — 재시드 멱등성 확보
+    void deleteByCreditAppId(Long creditAppId);
 }

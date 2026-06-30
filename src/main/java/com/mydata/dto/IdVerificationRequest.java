@@ -9,6 +9,7 @@ public class IdVerificationRequest {
     private String idResidentNo;
 
     private String idAddress;
+    private String idPhone;
     private String idIssueDate;
 
     public Long getAppId() {
@@ -49,6 +50,14 @@ public class IdVerificationRequest {
 
     public void setIdAddress(String idAddress) {
         this.idAddress = idAddress;
+    }
+
+    public String getIdPhone() {
+        return idPhone;
+    }
+
+    public void setIdPhone(String idPhone) {
+        this.idPhone = idPhone;
     }
 
     public String getIdIssueDate() {
