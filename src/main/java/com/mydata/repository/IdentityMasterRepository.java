@@ -16,4 +16,7 @@ public interface IdentityMasterRepository extends JpaRepository<IdentityMaster, 
     );
 
     Optional<IdentityMaster> findByCiValueAndStatus(String ciValue, String status);
+
+    // 테스트 신원 재시드 멱등성 확보용 (시드 전용 테이블)
+    void deleteByIdResidentNo(String idResidentNo);
 }

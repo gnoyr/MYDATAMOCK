@@ -19,4 +19,7 @@ public interface CreditProfileRepository extends JpaRepository<CreditProfile, Lo
     @Query("UPDATE CreditProfile c SET c.estimatedIncome = :estimatedIncome WHERE c.ciValue = :ciValue")
     void updateEstimatedIncome(@Param("ciValue") String ciValue,
                                @Param("estimatedIncome") Long estimatedIncome);
+
+    // 시드 더미(credit_app_id=0) 정리용 — 재시드 멱등성 확보
+    void deleteByCreditAppId(Long creditAppId);
 }
