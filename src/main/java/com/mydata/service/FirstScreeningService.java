@@ -152,6 +152,44 @@ public class FirstScreeningService {
         );
     }
 
+    /**
+     * 체크카드 심사.
+     * 체크카드(직불)는 신용평가·연소득·서류가 불필요하므로 신용카드용 screen()을 쓰지 않는다.
+     * 본인인증(CI) 일치만 확인되면 APPROVED를 반환하고, 실제 발급 가부(나이 조건 등)는
+     * BNKcard issueCard 단계에서 판정한다.
+     */
+    @Transactional
+    public FirstScreeningResponse screenCheck(FirstScreeningRequest request) {
+        if (request == null || request.getAppId() == null) {
+            throw new IllegalArgumentException("체크카드 심사 요청값이 없습니다.");
+        }
+        if (!hasText(request.getCiValue())) {
+            throw new IllegalArgumentException("CI값이 없습니다.");
+        }
+
+        IdVerification idVerification = idVerificationRepository
+                .findTopByAppIdOrderByCreatedAtDesc(request.getAppId())
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "본인인증 이력이 없습니다. appId=" + request.getAppId()));
+
+        if (!"Y".equals(idVerification.getIdVerifiedYn())) {
+            throw new SecurityException("본인인증이 완료되지 않은 신청입니다.");
+        }
+        if (!Objects.equals(idVerification.getGeneratedCiValue(), request.getCiValue())) {
+            throw new SecurityException("CI값 불일치: 심사 요청의 CI값이 본인인증 기록과 다릅니다.");
+        }
+
+        ScreeningDecision decision = ScreeningDecision.pass();
+        return new FirstScreeningResponse(
+                request.getAppId(),
+                decision.screeningResult,
+                decision.docVerifiedYn,
+                decision.applicationStatus,
+                decision.rejectionReason,
+                REVIEWED_BY
+        );
+    }
+
     // ── 서류 검증 ─────────────────────────────────────────────────
     private boolean isDocumentVerified(FirstScreeningRequest request) {
         return isValidDocKeyIfPresent(request.getIncomeDocKey())
@@ -161,7 +199,8 @@ public class FirstScreeningService {
 
     private boolean isValidDocKeyIfPresent(String docKey) {
         if (!hasText(docKey)) return true;
-        return docKey.trim().toLowerCase().startsWith("oci/");
+        // BNKcard ObjectStorageService가 저장하는 실제 키 형식: docs/income, docs/asset, docs/job
+        return docKey.trim().toLowerCase().startsWith("docs/");
     }
 
     // ── 유효성 검증 ───────────────────────────────────────────────

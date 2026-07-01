@@ -26,6 +26,7 @@ import java.util.List;
  * ├────────┼──────────────┼──────────┼───────────────────────────────────────┼────────────┤
  * │ 홍길동 │ 9001011      │ RESIDENT │ 서울특별시 강남구 테헤란로 123         │ 2020-01-01 │
  * │ 김영희 │ 9203152      │ RESIDENT │ 부산광역시 해운대구 해운대로 456       │ 2019-06-01 │
+ * │ 김현길 │ 9501141      │ RESIDENT │ 부산 부산진구 서전로37번길 40 가동 503호│ 2025-09-02 │
  * └────────┴──────────────┴──────────┴───────────────────────────────────────┴────────────┘
  * CI값은 CiValueGenerator(이름+주민번호앞7+주소)로 자동 계산되므로
  * 실제 본인인증 입력값이 위 표와 정확히 일치해야 심사가 통과된다.
@@ -45,6 +46,7 @@ public class DataInitializer implements ApplicationRunner {
         new TestUser(
             "홍길동", "900101", "1",
             "서울특별시 강남구 테헤란로 123",
+            "01011112222",
             "20200101", "RESIDENT_ID",
             780, 3_000_000L, 1,
             8_000_000L, 0.5, 0,
@@ -55,21 +57,44 @@ public class DataInitializer implements ApplicationRunner {
         new TestUser(
             "김영희", "920315", "2",
             "부산광역시 해운대구 해운대로 456",
+            "01033334444",
             "20190601", "RESIDENT_ID",
             650, 1_800_000L, 0,
             3_000_000L, 2.0, 1,
             "BUSINESS", 600_000L,
             21_600_000L,  // 연소득 (홈택스)
             "BUSINESS"    // 홈택스 소득 유형
+        ),
+        new TestUser(
+            "김현길", "950114", "1",
+            "부산 부산진구 서전로37번길 40 가동 503호",
+            "01089853746",
+            "20250902", "RESIDENT_ID",
+            750, 3_500_000L, 1,
+            5_000_000L, 0.0, 0,
+            "EMPLOYED", 800_000L,
+            42_000_000L,  // 연소득 (홈택스)
+            "RENTAL"      // 홈택스 소득 유형 (EMPLOYMENT와 UQ 제약 충돌 방지용)
         )
     );
 
     @Override
     @Transactional
     public void run(ApplicationArguments args) {
+        // 멱등 재시드: CI 공식이 바뀌어도 재기동마다 충돌 없이 다시 시드되도록
+        // 기존 시드 더미를 먼저 정리한다.
+        //  - HOMETAX/CREDIT_PROFILE: 더미 마커 credit_app_id=0 행만 삭제 (실제 심사 행은 credit_app_id≠0 → 보존)
+        //  - IDENTITY_MASTER: 테스트 신원(주민번호 기준)만 삭제 (시드 전용 테이블)
+        hometaxIncomeRepository.deleteByCreditAppId(0L);
+        creditProfileRepository.deleteByCreditAppId(0L);
         for (TestUser u : TEST_USERS) {
+            identityMasterRepository.deleteByIdResidentNo(u.residentFront + u.genderCode);
+        }
+
+        for (TestUser u : TEST_USERS) {
+            // CI = 이름 + 생년월일(주민번호 앞6) + 전화번호 (BNKcard와 동일 공식)
             String ciValue = ciValueGenerator.generate(
-                    u.name, u.residentFront, u.genderCode, u.address);
+                    u.name, u.residentFront, u.phone);
 
             seedIdentityMaster(u, ciValue);
             seedCreditProfile(u, ciValue);
@@ -140,6 +165,7 @@ public class DataInitializer implements ApplicationRunner {
         String residentFront,
         String genderCode,
         String address,
+        String phone,
         String issueDate,
         String idType,
         Integer creditScore,
