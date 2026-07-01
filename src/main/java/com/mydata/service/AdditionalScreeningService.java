@@ -1,7 +1,6 @@
 package com.mydata.service;
 
 import com.mydata.domain.AdditionalReview;
-import com.mydata.domain.CreditProfile;
 import com.mydata.domain.FirstScreening;
 import com.mydata.repository.AdditionalReviewRepository;
 import com.mydata.repository.CreditProfileRepository;
@@ -16,14 +15,12 @@ public class AdditionalScreeningService {
 
     private final AdditionalReviewRepository additionalReviewRepository;
     private final FirstScreeningRepository   firstScreeningRepository;
-    private final CreditProfileRepository    creditProfileRepository;
 
     public AdditionalScreeningService(AdditionalReviewRepository additionalReviewRepository,
                                       FirstScreeningRepository firstScreeningRepository,
                                       CreditProfileRepository creditProfileRepository) {
         this.additionalReviewRepository = additionalReviewRepository;
         this.firstScreeningRepository   = firstScreeningRepository;
-        this.creditProfileRepository    = creditProfileRepository;
     }
 
     @Transactional

@@ -122,7 +122,8 @@ public class AdditionalReviewAdminService {
                     profile != null ? profile.getLoanBalance()    : null,
                     profile != null ? profile.getDelinquencyRate(): null,
                     profile != null ? profile.getMultiDebtCount() : null,
-                    profile != null ? profile.getJobType()        : null
+                    profile != null ? profile.getJobType()        : null,
+                    profile != null ? profile.getMonthlyPayment() : null
             );
         }
 

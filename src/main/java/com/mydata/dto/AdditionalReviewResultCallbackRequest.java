@@ -15,6 +15,7 @@ public class AdditionalReviewResultCallbackRequest {
     private Double  delinquencyRate;
     private Integer multipleDebtCount;
     private String  jobType;
+    private Long    monthlyPayment;
 
     public AdditionalReviewResultCallbackRequest() {}
 
@@ -31,7 +32,8 @@ public class AdditionalReviewResultCallbackRequest {
                                                  Long estimatedMonthlyIncome,
                                                  Integer creditScore, Integer vehicleCount,
                                                  Long loanBalance, Double delinquencyRate,
-                                                 Integer multipleDebtCount, String jobType) {
+                                                 Integer multipleDebtCount, String jobType,
+                                                 Long monthlyPayment) {
         this.appId                  = appId;
         this.applicationStatus      = "PENDING_LIMIT";  // BNKcard가 한도 판정
         this.reviewedBy             = reviewedBy;
@@ -42,6 +44,7 @@ public class AdditionalReviewResultCallbackRequest {
         this.delinquencyRate        = delinquencyRate;
         this.multipleDebtCount      = multipleDebtCount;
         this.jobType                = jobType;
+        this.monthlyPayment         = monthlyPayment;
     }
 
     public Long    getAppId()                  { return appId; }
@@ -55,4 +58,5 @@ public class AdditionalReviewResultCallbackRequest {
     public Double  getDelinquencyRate()        { return delinquencyRate; }
     public Integer getMultipleDebtCount()      { return multipleDebtCount; }
     public String  getJobType()                { return jobType; }
+    public Long    getMonthlyPayment()         { return monthlyPayment; }
 }
